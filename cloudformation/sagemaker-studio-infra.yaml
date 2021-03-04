@@ -209,14 +209,14 @@ Resources:
       DomainId: !GetAtt SageMakerStudioDomain.DomainId
       UserProfileName: !Sub ${SageMakerStudioDomain}-default-user
 
-  SageMakerAppJupyterServer:
-    DependsOn: SageMakerUser
-    Type: AWS::SageMaker::App
-    Properties:
-      AppName: JupyterServer
-      AppType: JupyterServer
-      DomainId: !GetAtt SageMakerStudioDomain.DomainId
-      UserProfileName: !Sub ${SageMakerStudioDomain}-default-user # no way of referencing the user profile name only from AWS::SageMaker::UserProfile
+  # SageMakerAppJupyterServer:
+  #   DependsOn: SageMakerUser
+  #   Type: AWS::SageMaker::App
+  #   Properties:
+  #     AppName: default
+  #     AppType: JupyterServer
+  #     DomainId: !GetAtt SageMakerStudioDomain.DomainId
+  #     UserProfileName: !Sub ${SageMakerStudioDomain}-default-user # no way of referencing the user profile name only from AWS::SageMaker::UserProfile
 
 Outputs:
   VPC:
