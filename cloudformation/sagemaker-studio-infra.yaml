@@ -86,7 +86,7 @@ Resources:
               - sagemaker.amazonaws.com
       Path: /
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess # same as the default execution role created
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess # this is the same behaviour as the default execution role created by sagemaker
       Policies:
         - PolicyName: sagemakerstudio-demo-policy
           PolicyDocument: |
@@ -208,7 +208,6 @@ Resources:
     Properties:
       DomainId: !GetAtt SageMakerStudioDomain.DomainId
       UserProfileName: !Sub ${SageMakerStudioDomain}-default-user
-      # UserSettings: UserSettings
 
 Outputs:
   VPC:
