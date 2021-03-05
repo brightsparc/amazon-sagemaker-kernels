@@ -96,7 +96,7 @@ RUN conda install --quiet --yes \
     && \
     pip install --quiet --no-cache-dir \
     'boto3>1.0<2.0' \
-    'sagemaker>2.0<3.0' && \
+    'sagemaker==1.72.0' && \
     conda clean --all -f -y
 
 WORKDIR $HOME
