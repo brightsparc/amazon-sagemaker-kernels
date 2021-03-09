@@ -5,11 +5,11 @@ In this example we will build a Notebook kernel that can be used inside Sagemake
 We will use the SageMaker Studio Image Build CLI so that the entire process can be done
 from within Sagemaker Studio.
 
+## Build Kernel
 
-## Instrutions
+Follow the steps in [BUILD.ipynb](BUILD.ipynb) to build and register `my-custom-r-kernel` with SageMaker Studio.
 
-First follow the instructions in [PRE-REQS.ipynb](PRE-REQS.ipynb)
-to ensure you have all the right permissions.
+## Attach Kernel
 
-Then follow the steps in [BUILD.ipynb](BUILD.ipynb)
+Open the [r_xgboost_batch_transform.ipynb](r_xgboost_batch_transform.ipynb) notebook and attach to the new `my-custom-r-kernel` to execute the R code.
 
