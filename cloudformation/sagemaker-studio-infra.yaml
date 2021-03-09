@@ -3,6 +3,7 @@ Parameters:
   SageMakerStudioDomainName:
     Description: "Domain name for Sagemaker Studio Domain"
     Type: String
+    Default: "default"
 
 Resources:
   #########################
@@ -72,7 +73,7 @@ Resources:
   #
   #########################
   SageMakerDefaultBucket:
-    Type: AWS::Bucket
+    Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub sagemaker-${AWS::Region}-${AWS::AccountId}
       AccessControl: Private
@@ -94,7 +95,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess # this is the same behaviour as the default execution role created by sagemaker
       Policies:
-        - PolicyName: sagemakerstudio-demo-policy
+        - PolicyName: sagemakerstudio-custom-kernel
           PolicyDocument: |
             {
               "Statement": [
@@ -229,10 +230,10 @@ Outputs:
     Description: SageMaker Default Bucket
     Value: !Ref SageMakerDefaultBucket
 
-  SageMakerStudioDomain:
+  SageMakerStudioDomainId:
     Description: SageMaker Studio Domain
-    Value: !Ref SageMakerStudioDomain
+    Value: !GetAtt SageMakerStudioDomain.DomainId
 
-  SageMakerStudioExecutionRole:
+  SageMakerStudioExecutionRoleArn:
     Description: SageMaker Studio Execution Role
-    Value: !Ref SageMakerStudioExecutionRole
+    Value: !GetAtt SageMakerStudioExecutionRole.Arn
