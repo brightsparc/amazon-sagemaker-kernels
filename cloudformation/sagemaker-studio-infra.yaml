@@ -3,6 +3,7 @@ Parameters:
   SageMakerStudioDomainName:
     Description: "Domain name for Sagemaker Studio Domain"
     Type: String
+    Default: "default"
 
 Resources:
   #########################
@@ -71,6 +72,12 @@ Resources:
   # Sagemaker
   #
   #########################
+  SageMakerDefaultBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub sagemaker-${AWS::Region}-${AWS::AccountId}
+      AccessControl: Private
+
   SageMakerStudioExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -88,7 +95,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess # this is the same behaviour as the default execution role created by sagemaker
       Policies:
-        - PolicyName: sagemakerstudio-demo-policy
+        - PolicyName: sagemakerstudio-custom-kernel
           PolicyDocument: |
             {
               "Statement": [
@@ -219,22 +226,14 @@ Resources:
   #     UserProfileName: !Sub ${SageMakerStudioDomain}-default-user # no way of referencing the user profile name only from AWS::SageMaker::UserProfile
 
 Outputs:
-  VPC:
-    Description: A reference to the created VPC
-    Value: !Ref VPC
+  SageMakerDefaultBucket:
+    Description: SageMaker Default Bucket
+    Value: !Ref SageMakerDefaultBucket
 
-  PublicSubnets:
-    Description: A list of the public subnets
-    Value: !Join [",", [!Ref PublicSubnet1, !Ref PublicSubnet2]]
-
-  PublicSubnet1:
-    Description: A reference to the public subnet in the 1st Availability Zone
-    Value: !Ref PublicSubnet1
-
-  PublicSubnet2:
-    Description: A reference to the public subnet in the 2nd Availability Zone
-    Value: !Ref PublicSubnet2
-
-  SageMakerStudioDomain:
+  SageMakerStudioDomainId:
     Description: SageMaker Studio Domain
-    Value: !Ref SageMakerStudioDomain
+    Value: !GetAtt SageMakerStudioDomain.DomainId
+
+  SageMakerStudioExecutionRoleArn:
+    Description: SageMaker Studio Execution Role
+    Value: !GetAtt SageMakerStudioExecutionRole.Arn
