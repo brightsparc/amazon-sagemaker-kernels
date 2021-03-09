@@ -227,11 +227,11 @@ Resources:
 
 Outputs:
   SageMakerDefaultBucket:
-    Description: SageMaker Default Bucket
+    Description: SageMaker Default S3 Bucket
     Value: !Ref SageMakerDefaultBucket
 
   SageMakerStudioDomainId:
-    Description: SageMaker Studio Domain
+    Description: SageMaker Studio Domain ID
     Value: !GetAtt SageMakerStudioDomain.DomainId
 
   SageMakerStudioExecutionRoleArn:
