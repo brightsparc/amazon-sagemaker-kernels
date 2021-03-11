@@ -16,10 +16,21 @@ This stack will return output parameters for the following resources
 2. SageMaker Studio Domain ID
 3. SageMaker Studio Execution Role
 
+## Open SageMaker Studio and Clone the notebook
+
+1. Open the [SageMaker console](https://console.aws.amazon.com/sagemaker/)
+2. Chose **Amazon SageMaker Studio** at the top left of the page.
+3. On the **Amazon SageMaker Studio Control Panel**, choose the default username and then choose **Open Studio**.
+4. Follow the instructions to [Clone a Git Repository](https://docs.aws.amazon.com/sagemaker/latest/dg/studio-tasks-git.html) and provide the repository `https://github.com/brightsparc/amazon-sagemaker-kernels`
+
+![Launcher Select Image](git-clone-image.png)
+
+Open the cloned folder to browse to the `r-kernel` folder.
+
 ## Build R Notebook Kernel for Sagemaker Studio
 
-In the [r-kernel](r-kernel) example we demonstrate how to
+In the [r-kernel](r-kernel) example we use the [BUILD.ipynb](r-kernel/BUILD.ipynb) notebook to demonstrate how to
 use the Sagemaker Studio Image Build CLI to build and register
 a customer Notebook Kernel from within SageMaker Studio.
 
-This allows you to run R code inside a SageMaker Studio Notebook.
+This allows allows you to run R code inside a SageMaker Studio Notebook.
