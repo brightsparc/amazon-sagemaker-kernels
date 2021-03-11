@@ -20,6 +20,6 @@ This stack will return output parameters for the following resources
 
 In the [r-kernel](r-kernel) example we demonstrate how to
 use the Sagemaker Studio Image Build CLI to build and register
-a customer Notebook Kernel from within Sagemaker Studio.
+a customer Notebook Kernel from within SageMaker Studio.
 
-This allows you to run R code inside a Sagemaker Studio Notebook.
+This allows you to run R code inside a SageMaker Studio Notebook.
