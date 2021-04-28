@@ -242,6 +242,94 @@ Resources:
                   }
               ]
             }
+        - PolicyName: CDK-DeployPolicy
+          PolicyDocument: |
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "apigateway:*"
+                        ],
+                        "Resource": "arn:aws:apigateway:*::/*"
+                    },
+                    {
+                        "Action": [
+                            "dynamodb:*"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "arn:aws:dynamodb:*:*:table/ab-testing-*"
+                    },
+                    {
+                        "Action": [
+                            "lambda:*"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": [
+                          "arn:aws:lambda:*:*:function:ab-testing-api-*",
+                          "arn:aws:lambda:*:*:layer:*"
+                        ]
+                    },
+                    {
+                        "Action": [
+                            "firehose:*"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "arn:aws:firehose:*:*:deliverystream/ab-testing-*"
+                    },
+                    {
+                        "Action": [
+                            "s3:*"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": [
+                            "arn:aws:s3:::cdktoolkit-*",
+                            "arn:aws:s3:::ab-testing-api-*"
+                        ]
+                    },
+                    {
+                        "Action": [
+                            "cloudformation:*",
+                            "servicecatalog:*",
+                            "events:*"
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "*"
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "logs:*"
+                        ],
+                        "Resource": "arn:aws:logs:**:*:log-group:ab-testing-api-*"
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "iam:CreateRole",
+                            "iam:DeleteRole"
+                        ],
+                        "Resource": "arn:aws:iam::*:role/ab-testing-api-*"
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "iam:GetRole",
+                            "iam:PassRole",
+                            "iam:getRolePolicy",
+                            "iam:AttachRolePolicy",
+                            "iam:PutRolePolicy",
+                            "iam:DetachRolePolicy",
+                            "iam:DeleteRolePolicy"
+                        ],
+                        "Resource": [
+                          "arn:aws:iam::*:role/ab-testing-api-*",
+                          "arn:aws:iam::*:role/service-role/AmazonSageMaker*"
+                        ]
+                    }
+                ]
+            }
 
   LambdaExecutionPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -298,96 +386,75 @@ Resources:
             Resource: !GetAtt  SageMakerExecutionRole.Arn
       Roles:
         - !Ref  LambdaExecutionRole
-  
-  DomainDeploymentDelay:
-    Type: 'Custom::Delay'
-    DependsOn: SageMakerExecutionRole
+
+  VPC:
+    Type: AWS::EC2::VPC
     Properties:
-      ServiceToken: !GetAtt DelayLambda.Arn
-      TimeToWait: 300 
+      CidrBlock: 10.192.0.0/16
+      EnableDnsHostnames: true
 
-  DelayLambda:
-    Type: 'AWS::Lambda::Function'
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      Handler: "index.handler"
-      Timeout: 660
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python3.7
-      Code:
-        ZipFile: |
-          import json
-          import cfnresponse
-          import time
-          def handler(event, context):
-            time_to_wait = int(event['ResourceProperties']['TimeToWait'])
-            print(f'Waiting for {time_to_wait} seconds')
-            time.sleep(time_to_wait)
-            print(f'Waiting finished')
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, {},'')
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
 
-  DefaultVpcLambda:
-    Type: AWS::Lambda::Function
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
     Properties:
-      FunctionName: CFGetDefaultVpcId
-      Code:
-        ZipFile: |
-          import json
-          import boto3
-          import cfnresponse
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      CidrBlock: 10.192.10.0/24
+      MapPublicIpOnLaunch: true
 
-          ec2 = boto3.client('ec2')
-
-          def lambda_handler(event, context):
-              if 'RequestType' in event and event['RequestType'] == 'Create':
-                  vpc_id = get_default_vpc_id()
-                  subnets =  get_subnets_for_vpc(vpc_id)
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {'VpcId': vpc_id , "Subnets" : subnets}, '')
-              else:
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {},'')
-
-          def get_default_vpc_id():
-              vpcs = ec2.describe_vpcs(Filters=[{'Name': 'is-default', 'Values': ['true']}])
-              vpcs = vpcs['Vpcs']
-              vpc_id = vpcs[0]['VpcId']
-              return vpc_id
-
-
-          def get_subnets_for_vpc(vpcId):
-              response = ec2.describe_subnets(
-                  Filters=[
-                      {
-                          'Name': 'vpc-id',
-                          'Values': [vpcId]
-                      }
-                  ]
-              )
-              subnet_ids = []
-              for subnet in response['Subnets']:
-                  subnet_ids.append(subnet['SubnetId'])
-              return subnet_ids 
-      Description: Return default VPC ID and Subnets
-      Handler: index.lambda_handler
-      MemorySize: 512
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python3.7
-      Timeout: 900
-
-  DefaultVpcFinder:
-    Type: Custom::ResourceForFindingDefaultVpc
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
     Properties:
-      ServiceToken: !GetAtt DefaultVpcLambda.Arn
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      CidrBlock: 10.192.11.0/24
+      MapPublicIpOnLaunch: true
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
 
   StudioDomain:
     Type: AWS::SageMaker::Domain
-    DependsOn: DomainDeploymentDelay    
-    Properties: 
+    Properties:
       AppNetworkAccessType: PublicInternetOnly
       AuthMode: IAM
-      DefaultUserSettings: 
+      DefaultUserSettings:
           ExecutionRole: !GetAtt SageMakerExecutionRole.Arn
-      DomainName: !Ref DomainName 
-      SubnetIds: !GetAtt DefaultVpcFinder.Subnets
-      VpcId: !GetAtt DefaultVpcFinder.VpcId
+      DomainName: !Ref DomainName
+      SubnetIds:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      VpcId: !Ref VPC
 
   EnableProjectsLambda:
     Type: AWS::Lambda::Function
