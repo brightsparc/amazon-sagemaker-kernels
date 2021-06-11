@@ -516,6 +516,8 @@ Resources:
     Properties: 
       DomainId: !GetAtt StudioDomain.DomainId
       UserProfileName: !Ref UserProfileName
+      UserSettings:
+        ExecutionRole: !GetAtt SageMakerExecutionRole.Arn
 
   JupyterApp:
     Type: AWS::SageMaker::App
@@ -525,21 +527,21 @@ Resources:
       AppType: JupyterServer
       DomainId: !GetAtt StudioDomain.DomainId
       UserProfileName: !Ref UserProfileName
-  
-  # DataScienceApp:
-  #   Type: AWS::SageMaker::App
-  #   DependsOn: UserProfile
-  #   Properties: 
-  #     AppName: instance-event-engine-datascience-ml-t3-medium
-  #     AppType: KernelGateway
-  #     DomainId: !GetAtt StudioDomain.DomainId
-  #     ResourceSpec: 
-  #       InstanceType:  ml.t3.medium
-  #       SageMakerImageArn: !FindInMap
-  #         - RegionMap
-  #         - !Ref 'AWS::Region'
-  #         - datascience
-  #     UserProfileName: !Ref UserProfileName
+
+  DataScienceApp:
+    Type: AWS::SageMaker::App
+    DependsOn: UserProfile
+    Properties:
+      AppName: instance-event-engine-datascience-ml-t3-medium
+      AppType: KernelGateway
+      DomainId: !GetAtt StudioDomain.DomainId
+      ResourceSpec:
+        InstanceType:  ml.t3.medium
+        SageMakerImageArn: !FindInMap
+          - RegionMap
+          - !Ref 'AWS::Region'
+          - datascience
+      UserProfileName: !Ref UserProfileName
 
   AmazonSageMakerServiceCatalogProductsLaunchRole:
     Type: "AWS::IAM::Role"
